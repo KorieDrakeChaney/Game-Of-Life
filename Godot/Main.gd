@@ -18,8 +18,8 @@ func _ready():
 	connect_nodes();
 
 func create_grid(): 
-	for x in range(0, SCREEN_SIZE.x / CELLSIZE):
-		for y in range(0, SCREEN_SIZE.y / CELLSIZE):
+	for x in range(0, int(SCREEN_SIZE.x / CELLSIZE)):
+		for y in range(0, int(SCREEN_SIZE.y / CELLSIZE)):
 			var cell = Cell.instance();
 			cell.isAlive = false;
 			cell.position = Vector2(CELLSIZE * x + CELLSIZE / 2, CELLSIZE * y + CELLSIZE / 2);
@@ -54,8 +54,8 @@ func alive_process():
 
 
 func connect_nodes():
-	var cell_y = SCREEN_SIZE.y / CELLSIZE;
-	var cell_x = SCREEN_SIZE.x / CELLSIZE;
+	var cell_y = int(SCREEN_SIZE.y / CELLSIZE);
+	var cell_x = int(SCREEN_SIZE.x / CELLSIZE);
 	for i in range(0, cell_array.size() - 1):
 			# top
 			if fmod(i, cell_y) != 0:
