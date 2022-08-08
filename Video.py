@@ -3,7 +3,7 @@ import random
 import math
 
 class Title(Tex):
-    def __init__(self, title, **kwargs):
+    def __init__(self, title = "", **kwargs):
         super().__init__(title, **kwargs)
         self.to_corner(UP*2)
 
@@ -120,6 +120,26 @@ class Grid(VGroup):
             cell.isAlive = False
 
 
+    def update_grid(self):
+            
+            for cell in self.cells:
+                cell.aliveNeighbors = 0
+                for id in cell.neighbors:
+                    if self.cells[id].isAlive:
+                        cell.aliveNeighbors += 1
+            for cell in self.cells:
+                if cell.aliveNeighbors == 2:
+                    pass
+                elif cell.aliveNeighbors == 3:
+                    cell.isAlive = True
+                else:
+                    cell.isAlive = False
+
+                if not cell.isAlive:
+                    cell.set_fill(BLUE_D, opacity=0.5)
+                elif not cell.prevLife and cell.isAlive:
+                    cell.set_fill(BLUE_A, opacity=1.0)
+
     @staticmethod
     def still_grid(type):
         match type:
@@ -234,65 +254,7 @@ class Grid(VGroup):
                     grid.cells[id].set_fill(BLUE_A, opacity=1.0)
                 return grid
 
-    @staticmethod
-    def spaceship_grid(type):
-        match type:
-            case "glider":
-                grid = Grid(width = 12, height = 12)
-                alive = [
-                    9, 10, 13, 14
-                ]
-                for id in alive:
-                    grid.cells[id].isAlive = True
-                    grid.cells[id].set_fill(BLUE_A, opacity=1.0)
-                return grid
-            case "lightweight":
-                grid = Grid(width = 20, height = 20)
-                alive = [
-                    9, 10, 13, 14
-                ]
-                for id in alive:
-                    grid.cells[id].isAlive = True
-                    grid.cells[id].set_fill(BLUE_A, opacity=1.0)
-                return grid
-            case "middleweight":
-                grid = Grid(width = 22, height = 22)
-                alive = [
-                    9, 10, 13, 14
-                ]
-                for id in alive:
-                    grid.cells[id].isAlive = True
-                    grid.cells[id].set_fill(BLUE_A, opacity=1.0)
-                return grid
-            case "heavyweight":
-                grid = Grid(width = 24, height = 24)
-                alive = [
-                    9, 10, 13, 14
-                ]
-                for id in alive:
-                    grid.cells[id].isAlive = True
-                    grid.cells[id].set_fill(BLUE_A, opacity=1.0)
-                return grid
 
-    def update_grid(self):
-        
-        for cell in self.cells:
-            cell.aliveNeighbors = 0
-            for id in cell.neighbors:
-                if self.cells[id].isAlive:
-                    cell.aliveNeighbors += 1
-        for cell in self.cells:
-            if cell.aliveNeighbors == 2:
-                pass
-            elif cell.aliveNeighbors == 3:
-                cell.isAlive = True
-            else:
-                cell.isAlive = False
-
-            if not cell.isAlive:
-                cell.set_fill(BLUE_D, opacity=0.5)
-            elif not cell.prevLife and cell.isAlive:
-                cell.set_fill(BLUE_A, opacity=1.0)
 
 
 class Intro(Scene):
@@ -301,18 +263,25 @@ class Intro(Scene):
         background.set_fill(GREY_E, opacity=0.75)
         background.scale(10)
         self.add(background)
+        title = Title("Game Of Life")
+        self.add(title)
         START = (-3,2.5,0)
         END =   (3,2.5,0)
-        block_grid = Grid.oscillator_grid("pulsar")
-        block_grid.set_fill(BLUE_A, opacity=0.1)
-        block_grid.update_grid()
-        self.play(*[FadeIn(_) for _ in block_grid])
-        for i in range(4):
-            block_grid.update_grid()
+        line = Line(START,END, stroke_color=YELLOW_C);
+        line.set_fill(BLUE_A, opacity=1) 
+        viewport = Rectangle(stroke_color=BLACK, height = 5.2, width = 5.2)
+        viewport.set_fill(BLACK, opacity=1) 
+        viewport.move_to([0, -0.5, 0])
+        grid = Grid.oscillator_grid("pulsar")
+        grid.set_fill(BLUE_A, opacity=0.1)
+        grid.update_grid()
+        grid.move_to([0, -0.5, 0])
+        self.play(FadeIn(viewport), *[FadeIn(_) for _ in grid], Create(line))
+        for i in range(6):
+            grid.update_grid()
             self.wait(0.5)
-        block_grid.update_grid()
-        self.play(block_grid.animate.shift(RIGHT * 4 + DOWN * 1.5).scale(0.75))
-        block_grid.update_grid()
+        self.play(*[FadeOut(_) for _ in grid], FadeOut(title), background.animate.set_fill(BLACK, opacity=1.0), Uncreate(line))
+        self.wait(0.5)
 
 
 class Grid3D(ThreeDScene):
@@ -321,6 +290,28 @@ class Grid3D(ThreeDScene):
         grid = ThreeDGrid()
         self.add(grid)
         
+class Description(Scene):
+    def construct(self):
+        background = Square()
+        background.set_fill(GREY_E, opacity=0.75)
+        background.scale(10)
+        viewport = Rectangle(stroke_color=BLACK, height = 5.2, width = 5.2)
+        viewport.set_fill(BLACK, opacity=1) 
+        viewport.move_to([0, -0.5, 0])
+        title = Title("Description");
+        self.add(background, title)
+        START = (-1.5,2.5,0)
+        END =   (1.5,2.5,0)
+        line = Line(START,END, stroke_color=YELLOW_C);
+        line.set_fill(BLUE_A, opacity=1) 
+        grid = Grid()
+        grid.move_to([0, -0.5, 0])
+        self.play(Create(line), *[Create(_) for _ in grid])
+
+
+
+
+
 class RuleExplanation(Scene):
     def construct(self):
         background = Square()
@@ -336,16 +327,17 @@ class RuleExplanation(Scene):
         line = Line(START,END, stroke_color=YELLOW_C);
         line.set_fill(BLUE_A, opacity=1) 
         grid = Grid()
-        self.play(Create(line), FadeIn(viewport),grid.animate.set_fill(BLUE_D, opacity=0.5))
+        grid.move_to([0, -0.5, 0])
+        self.play(Create(line), FadeIn(viewport), *[FadeIn(_) for _ in grid])
         self.play(grid.animate.scale(0.75), viewport.animate.scale(0.75))
         t1 = VGroup(grid.cells[11], grid.cells[13])
         t2 = VGroup(grid.cells[7], grid.cells[17])
         self.play(grid.animate.shift(LEFT * 2), viewport.animate.shift(LEFT * 2))
-        rule_one = Tex(r"Any live cell with " , r"two ", r"or ", r"three ",  r"live ", r"neighbours ", r"\\ survives", font_size=24)
+        rule_one = Tex(r"Any ", r'live ', r"cell with " , r"two ", r"or ", r"three ",  r"live ", r"neighbours ", r"\\ survives", font_size=24)
         rule_one.move_to([3, 1.15, 0])
-        rule_two = Tex(r'Any dead cell with ', r'three ', r'live ' , r'neighbours \\ becomes a live cell', font_size=24)
+        rule_two = Tex(r'Any ', r'dead', r' cell with ', r'three ', r'live ' , r'neighbours \\ becomes a ', r'live', r' cell', font_size=24)
         rule_two.move_to([3, -0.4, 0])
-        rule_three = Tex(r'All other live cells die in the next generation.', r'\\ Similarly, all other dead cells ' , r'stay dead', font_size=24)
+        rule_three = Tex(r'All other ', r'live', r' cells ', r'die',  r' in the next generation.', r'\\ Similarly, all other ', r'dead',  r' cells ' , r'stay dead', font_size=24)
         rule_three.move_to([3, -2.15, 0])
         self.wait(1)
         self.play(Write(rule_one))
@@ -353,7 +345,7 @@ class RuleExplanation(Scene):
         self.play(Write(rule_three))
         self.play(Circumscribe(rule_one))
         self.play(FadeOut(rule_two,shift=DOWN), FadeOut(rule_three,shift=DOWN), 
-                rule_one.animate.shift(DOWN * 2), grid.animate.shift(ORIGIN))
+                rule_one.animate.move_to([3, -0.5, 0]), grid.animate.shift(ORIGIN))
         rule_two.next_to(rule_one, ORIGIN)
         rule_three.next_to(rule_one, ORIGIN)
         vals = np.arange(1,10).reshape(3,3)
@@ -364,7 +356,7 @@ class RuleExplanation(Scene):
         tracker = ValueTracker(1)   
         decimal.add_updater(lambda d: d.set_value(tracker.get_value()))
         decimal.next_to(generation, RIGHT)
-        self.play(grid.cells[12].animate.set_fill(BLUE_A, opacity=1), Write(generation), Write(decimal), rule_one[1].animate.set_fill(YELLOW_C, opacity=1.0), rule_one[4].animate.set_fill(GREEN_C, opacity=1.0), rule_one[3].animate.set_fill(YELLOW_C, opacity=1.0), rule_one[5].animate.set_fill(YELLOW_C, opacity=1.0))
+        self.play(grid.cells[12].animate.set_fill(BLUE_A, opacity=1), Write(generation), Write(decimal), rule_one[3].animate.set_fill(YELLOW_C, opacity=1.0), rule_one[1].animate.set_fill(GREEN_C, opacity=1.0), rule_one[6].animate.set_fill(GREEN_C, opacity=1.0), rule_one[5].animate.set_fill(YELLOW_C, opacity=1.0), rule_one[8].animate.set_fill(PURE_GREEN, opacity=1.0))
         self.wait(1)
         
         number_group_one = VGroup()
@@ -380,11 +372,8 @@ class RuleExplanation(Scene):
         grid.cells[17].animate.set_fill(BLUE_A, opacity=1))
         self.play(Circumscribe(grid.cells[6], run_time=2, fade_out=True, buff=0), Circumscribe(grid.cells[17], run_time=2, fade_out=True, buff=0))
         self.wait(1)
-        b0 = [-0.175, 0.33, 0]
-        b1 = [-0.1, 0, 0]
-        b2 = [0.5, 0.65, 0]
-
         self.play(grid.cells[12].animate.set_fill(GREEN_C, opacity=1), FadeOut(rule_one, shift=UP*1.5),  FadeIn(rule_two, shift=UP*1.5), FadeOut(number_group_one, shift=ORIGIN), Circumscribe(grid.cells[11], run_time=2, buff=0, color=BLACK))
+        self.play(rule_two[1].animate.set_fill(RED, opacity=1.0), rule_two[4].animate.set_fill(GREEN_C, opacity=1.0), rule_two[3].animate.set_fill(YELLOW_C, opacity=1.0), rule_two[6].animate.set_fill(GREEN_C, opacity=1.0))
         number_group_two = VGroup()
         neighbors_two = [5, 10, 15, 6, 16, 7, 12, 17]
         for i, c in enumerate(neighbors_two, 1):
@@ -396,6 +385,7 @@ class RuleExplanation(Scene):
         self.wait(1)
         self.play(grid.cells[11].animate.set_fill(GREEN_C, opacity=0.5), FadeOut(rule_two, shift=UP*1.5),  FadeIn(rule_three, shift=UP*1.5), FadeOut(number_group_two, shift=ORIGIN), 
         Circumscribe(grid.cells[17], run_time=2, buff=0, color=BLACK))
+        self.play(rule_three[1].animate.set_fill(GREEN_C, opacity=1.0), rule_three[3].animate.set_fill(RED, opacity=1.0))
         number_group_three = VGroup()
         neighbors_three = [11, 16, 21, 12, 22, 13, 18, 23]
         for i, c in enumerate(neighbors_three, 1):
@@ -404,7 +394,7 @@ class RuleExplanation(Scene):
             number_group_three.add(d)
         self.play(Create(number_group_three))
         self.play(Circumscribe(grid.cells[12], run_time=2, fade_out=True, buff=0))
-        self.play(grid.cells[17].animate.set_fill(RED, opacity=1.0), FadeOut(number_group_three, shift=ORIGIN),  rule_three[0].animate.set_fill(GREY_E, opacity=1), rule_three[2].animate.set_fill(RED, opacity=1))
+        self.play(grid.cells[17].animate.set_fill(RED, opacity=1.0), FadeOut(number_group_three, shift=ORIGIN),  rule_three[0].animate.set_fill(GREY_E, opacity=1), rule_three[1].animate.set_fill(GREY_E, opacity=1), rule_three[2].animate.set_fill(GREY_E, opacity=1), rule_three[3].animate.set_fill(GREY_E, opacity=1), rule_three[4].animate.set_fill(GREY_E, opacity=1), rule_three[6].animate.set_fill(RED, opacity=1), rule_three[8].animate.set_fill(PURE_RED, opacity=1))
         self.wait(1)
         everything_group = VGroup()
         everything_else = [0, 5, 10, 15, 20, 1, 6, 16, 21, 2, 7, 22, 3, 8, 13, 18, 23, 4, 9, 14, 19, 24]
@@ -417,6 +407,9 @@ class RuleExplanation(Scene):
         self.wait(1)
         tracker.set_value(2)
         self.play(FadeOut(rule_three, shift=UP*1.5), grid.cells[12].animate.set_fill(BLUE_A, opacity=1), grid.cells[11].animate.set_fill(BLUE_A, opacity=1), everything_group.animate.set_fill(BLUE_D, opacity=0.5), grid.cells[17].animate.set_fill(BLUE_D, opacity=0.5))
+        self.wait(0.5)
+        self.play(*[FadeOut(_) for _ in grid], FadeOut(title), background.animate.set_fill(BLACK, opacity=1.0), Uncreate(line), Uncreate(generation), FadeOut(decimal))
+        self.wait(0.5)
 
 class Thumbnail(Scene):
     def construct(self):
@@ -436,6 +429,7 @@ class Thumbnail(Scene):
         line.next_to(title, DOWN * 0.5)
         self.add(background, title, line)
         grid= Grid.oscillator_grid("pulsar")
+        grid.move_to([0, -0.5, 0])
         generation = Text('Generation :').scale(0.7)
         generation.move_to([-0.25, -3.25, 0])
         decimal = DecimalNumber(1, num_decimal_places=0, include_sign=False, unit=None)
