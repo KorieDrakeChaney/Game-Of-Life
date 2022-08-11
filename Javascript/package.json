@@ -1,0 +1,14 @@
+{
+  "name": "grid",
+  "version": "1.0.0",
+  "description": "Grid",
+  "main": "server.js",
+  "scripts": {
+    "dev" : "npx nodemon server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
+}
