@@ -1,6 +1,7 @@
 from manim import *
 import random
 import math
+from numpy import array_equal
 
 class Title(Tex):
     def __init__(self, title = "", **kwargs):
@@ -16,7 +17,7 @@ class ThreeDCell(Cube):
         super().__init__(**kwargs)
         self.isAlive = False
         self.aliveNeighbors = 0
-        self.index : int
+        self : int
         self.prevLife = False
         self.neighbors = []
 
@@ -35,7 +36,7 @@ class ThreeDGrid(VGroup):
                 for z in range(self.depth):
                     s = ThreeDCell(stroke_color=WHITE, width =1 / (width / 5), height = 1 / (height / 5), depth=1 / (depth / 5))
                     s.move_to([x / (width / 5), y / (height / 5), z / (depth / 5)])
-                    s.index = len(self.cells)
+                    s = len(self.cells)
                     self.cells.append(s)
                     self.add(s)
 
@@ -43,184 +44,180 @@ class ThreeDGrid(VGroup):
         self.connect_nodes()
         self.update_grid()
 
-class Cell(Rectangle):
-    isAlive = False
+class Cell(Square):
+    state = 0
     aliveNeighbors = 0
-    index = 0
+    pos = [0, 0]
     neighbors = []
-    def __init__(self, **kwargs):
+    def __init__(self, pos = [0, 0], **kwargs):
         super().__init__(**kwargs)
-        self.isAlive = False
+        self.pos = pos
+        self.isAlive = 0
         self.aliveNeighbors = 0
-        self.index : int
-        self.prevLife = False
         self.neighbors = []
 
 class Grid(VGroup):
     width = 5
     height = 5
     cells = []
-    def __init__(self, width = 5, height = 5, **kwargs):
+    def __init__(self, width = 5, height = 0, **kwargs):
         super().__init__(**kwargs)
-        self.width = width
-        self.height = height
-        for x in range(self.width):
-            for y in range(self.height, 0, -1):
-                s = Cell(stroke_color=WHITE, width =1 / (width / 5), height = 1 / (height / 5))
-                s.move_to([x / (width / 5), y / (height / 5), 0])
-                s.index = len(self.cells)
+        if height == 0: self.height = width
+        else: self.height = height;
+        self.width = width;
+        for y in range(self.height, 0, -1):
+            for x in range(self.width):
+                s = Cell(pos=[x, y], stroke_color=BLACK,  side_length = 1 / (width / 5), stroke_width = 1)
+                s.move_to([x / (width / 5), y / (width / 5), 0])
                 self.cells.append(s)
                 self.add(s)
-
         self.center()
+        self.randomize();
         self.connect_nodes()
         self.update_grid()
 
     def connect_nodes(self):
         for i in range(0, len(self.cells)):
-                # top
-                if i % self.height != 0:
-                    self.cells[i].neighbors.append(self.cells[i - 1].index)
-                else: 
-                    self.cells[i].neighbors.append(self.cells[i + self.height - 1].index)
-                # bottom
-                if (i + 1) % self.height != 0:
-                    self.cells[i].neighbors.append(self.cells[i + 1].index)
-                else:
-                    self.cells[i].neighbors.append(self.cells[i - self.height - 1].index)
-                # right
-                if i < (len(self.cells) - self.height):
-                    self.cells[i].neighbors.append(self.cells[i + self.height].index)
-                else: 
-                    self.cells[i].neighbors.append(self.cells[len(self.cells) - i].index)
-                #left
-                if i > self.height:
-                    self.cells[i].neighbors.append(self.cells[i - self.height].index)
-                if (i + 1) % self.height != 0 and i < (len(self.cells) - self.height):
-                    self.cells[i].neighbors.append(self.cells[i + self.height + 1].index)
-                if (i + 1) % self.height != 0 and i > self.height:
-                    self.cells[i].neighbors.append(self.cells[i - self.height + 1].index)
-                if  i % self.height != 0 and i < (len(self.cells) - self.height):
-                    self.cells[i].neighbors.append(self.cells[i + self.height - 1].index)
-                if  i % self.height != 0 and i > self.height:
-                    self.cells[i].neighbors.append(self.cells[i - self.height - 1].index)
+                positions = [
+                    [0, 1], 
+                    [0, -1],
+                    [1, 0],
+                    [-1, 0],
+                    [-1, -1],
+                    [1, -1],
+                    [-1, 1],
+                    [1, 1],
+                ]
 
+                for position in positions:
+                    count = 0
+                    for cell in self.cells:
+                        if array_equal(cell.pos, [self.cells[i].pos[0] + position[0], self.cells[i].pos[1] + position[1]]):
+                            self.cells[i].neighbors.append(count)
+                        count+=1
     def randomize(self):
         for cell in self.cells:
             randNumber = random.randint(0, 100)
             if randNumber > 65:
-                cell.isAlive = True;
-                cell.set_fill(BLUE_A, opacity=1.0)
+                cell.state = 1
+                cell.set_fill(WHITE, opacity=1.0)
             else:
-                cell.isAlive = False;
-                cell.set_fill(BLUE_D, opacity=0.5)
+                cell.state = 0;
+                cell.set_fill(BLACK, opacity=1.0)
+
             
     def clear(self):
         for cell in self.cells:
-            cell.isAlive = False
+            cell.state = 0;
 
 
     def update_grid(self):
             
             for cell in self.cells:
-                cell.aliveNeighbors = 0
-                for id in cell.neighbors:
-                    if self.cells[id].isAlive:
-                        cell.aliveNeighbors += 1
+                count = 0
+                for neighbor in cell.neighbors:
+                    count += self.cells[neighbor].state
+                cell.aliveNeighbors = count;
+    
             for cell in self.cells:
+
                 if cell.aliveNeighbors == 2:
                     pass
                 elif cell.aliveNeighbors == 3:
-                    cell.isAlive = True
+                    cell.state = 1
                 else:
-                    cell.isAlive = False
-
-                if not cell.isAlive:
-                    cell.set_fill(BLUE_D, opacity=0.5)
-                elif not cell.prevLife and cell.isAlive:
-                    cell.set_fill(BLUE_A, opacity=1.0)
+                    cell.state = 0
+                if cell.state == 1:
+                    cell.set_fill(color=WHITE, opacity=1.0)
+                else:
+                    cell.set_fill(color=BLACK, opacity=1.0)
 
     @staticmethod
-    def still_grid(type):
+    def to(type):
         match type:
             case "block":
                 grid = Grid(width = 4, height = 4)
+                grid.clear()
                 alive = [
                     5, 6, 9, 10
                 ]
                 for id in alive:
-                    grid.cells[id].isAlive = True
-                    grid.cells[id].set_fill(BLUE_A, opacity=1.0)
+                    grid.cells[id].state = 1
+                    grid.cells[id].set_fill(WHITE, opacity=1.0)
                 return grid
             case "beehive":
                 grid = Grid(width = 6, height = 5)
+                grid.clear()
                 alive = [
                     7, 11, 13, 16, 18, 22
                 ]
                 for id in alive:
-                    grid.cells[id].isAlive = True
-                    grid.cells[id].set_fill(BLUE_A, opacity=1.0)
+                    grid.cells[id].state = 1
+                    grid.cells[id].set_fill(WHITE, opacity=1.0)
                 return grid
             case "loaf":
                 grid = Grid(width = 6, height = 6)
+                grid.clear()
                 alive = [
                     8, 13, 15, 19, 22, 26, 27
                 ]
                 for id in alive:
-                    grid.cells[id].isAlive = True
-                    grid.cells[id].set_fill(BLUE_A, opacity=1.0)
+                    grid.cells[id].state = 1
+                    grid.cells[id].set_fill(WHITE, opacity=1.0)
                 return grid
             case "boat":
                 grid = Grid(width = 5, height = 5)
+                grid.clear()
                 alive = [
                     6, 7, 11, 13, 17
                 ]
                 for id in alive:
-                    grid.cells[id].isAlive = True
-                    grid.cells[id].set_fill(BLUE_A, opacity=1.0)
+                    grid.cells[id].state = 1
+                    grid.cells[id].set_fill(WHITE, opacity=1.0)
                 return grid
             case "tub":
                 grid = Grid(width = 5, height = 5)
+                grid.clear()
                 alive = [
                     7, 11, 13, 17
                 ]
                 for id in alive:
-                    grid.cells[id].isAlive = True
-                    grid.cells[id].set_fill(BLUE_A, opacity=1.0)
+                    grid.cells[id].state = 1
+                    grid.cells[id].set_fill(WHITE, opacity=1.0)
                 return grid
-    
-    @staticmethod   
-    def oscillator_grid(type):
-        match type:
             case "blinker":
                 grid = Grid(width = 5, height = 5)
+                grid.clear()
                 alive = [
                     7, 12, 17
                 ]
                 for id in alive:
-                    grid.cells[id].isAlive = True
-                    grid.cells[id].set_fill(BLUE_A, opacity=1.0)
+                    grid.cells[id].state = 1
+                    grid.cells[id].set_fill(WHITE, opacity=1.0)
                 return grid
             case "toad":
                 grid = Grid(width = 6, height = 6)
+                grid.clear()
                 alive = [
                     9, 14, 15, 20, 21, 26
                 ]
                 for id in alive:
-                    grid.cells[id].isAlive = True
-                    grid.cells[id].set_fill(BLUE_A, opacity=1.0)
+                    grid.cells[id].state = 1
+                    grid.cells[id].set_fill(WHITE, opacity=1.0)
                 return grid
             case "beacon":
                 grid = Grid(width = 6, height = 6)
+                grid.clear()
                 alive = [
                     7, 8, 13, 22, 27, 28
                 ]
                 for id in alive:
-                    grid.cells[id].isAlive = True
-                    grid.cells[id].set_fill(BLUE_A, opacity=1.0)
+                    grid.cells[id].state = 1
+                    grid.cells[id].set_fill(WHITE, opacity=1.0)
                 return grid
             case "pulsar":
                 grid = Grid(width = 17, height = 17)
+                grid.clear()
                 alive = [
                     38, 39, 45, 46, 
                     56, 57, 61, 62, 
@@ -239,19 +236,20 @@ class Grid(VGroup):
 
                 ]
                 for id in alive:
-                    grid.cells[id].isAlive = True
-                    grid.cells[id].set_fill(BLUE_A, opacity=1.0)
+                    grid.cells[id].state = 1
+                    grid.cells[id].set_fill(WHITE, opacity=1.0)
                 return grid
             case "pentadecathlon":
                 grid = Grid(width = 11, height = 18)
+                grid.clear()
                 alive = [
                     58, 59, 66, 67, 75, 78, 83, 86, 
                     93, 96, 101, 104, 111, 114, 119, 122, 
                     130, 131, 138, 139
                 ]
                 for id in alive:
-                    grid.cells[id].isAlive = True
-                    grid.cells[id].set_fill(BLUE_A, opacity=1.0)
+                    grid.cells[id].state = 1
+                    grid.cells[id].set_fill(WHITE, opacity=1.0)
                 return grid
 
 
@@ -265,23 +263,21 @@ class Intro(Scene):
         self.add(background)
         title = Title("Game Of Life")
         self.add(title)
-        START = (-3,2.5,0)
-        END =   (3,2.5,0)
+        START = (-2.5,2.5,0)
+        END =   (2.5,2.5,0)
         line = Line(START,END, stroke_color=YELLOW_C);
         line.set_fill(BLUE_A, opacity=1) 
         viewport = Rectangle(stroke_color=BLACK, height = 5.2, width = 5.2)
         viewport.set_fill(BLACK, opacity=1) 
         viewport.move_to([0, -0.5, 0])
-        grid = Grid.oscillator_grid("pulsar")
-        grid.set_fill(BLUE_A, opacity=0.1)
+        grid = Grid.to("pulsar")
         grid.update_grid()
         grid.move_to([0, -0.5, 0])
         self.play(FadeIn(viewport), *[FadeIn(_) for _ in grid], Create(line))
-        for i in range(6):
+        for i in range(20):
             grid.update_grid()
-            self.wait(0.5)
+            self.wait(0.25)
         self.play(*[FadeOut(_) for _ in grid], FadeOut(title), background.animate.set_fill(BLACK, opacity=1.0), Uncreate(line))
-        self.wait(0.5)
 
 
 class Grid3D(ThreeDScene):
@@ -327,7 +323,11 @@ class RuleExplanation(Scene):
         line = Line(START,END, stroke_color=YELLOW_C);
         line.set_fill(BLUE_A, opacity=1) 
         grid = Grid()
+        
+        grid.clear();
         grid.move_to([0, -0.5, 0])
+        for i in range(len(grid)):
+            grid[i].set_fill(BLUE_D, opacity=0.5)
         self.play(Create(line), FadeIn(viewport), *[FadeIn(_) for _ in grid])
         self.play(grid.animate.scale(0.75), viewport.animate.scale(0.75))
         t1 = VGroup(grid.cells[11], grid.cells[13])
@@ -366,7 +366,7 @@ class RuleExplanation(Scene):
             d.next_to(grid.cells[c], ORIGIN)
             number_group_one.add(d)
         self.play(Create(number_group_one))
-
+        print('a')
         # Rule 1
         self.play(grid.cells[6].animate.set_fill(BLUE_A, opacity=1), 
         grid.cells[17].animate.set_fill(BLUE_A, opacity=1))
@@ -378,6 +378,7 @@ class RuleExplanation(Scene):
         neighbors_two = [5, 10, 15, 6, 16, 7, 12, 17]
         for i, c in enumerate(neighbors_two, 1):
             d = DecimalNumber(i, num_decimal_places=0, include_sign=False, unit=None)
+            d.set_fill(BLACK, opacity=1)
             d.next_to(grid.cells[c], ORIGIN)
             number_group_two.add(d)
         self.play(Create(number_group_two))
@@ -428,7 +429,7 @@ class Thumbnail(Scene):
         line.set_fill(BLUE_A, opacity=1) 
         line.next_to(title, DOWN * 0.5)
         self.add(background, title, line)
-        grid= Grid.oscillator_grid("pulsar")
+        grid= Grid.to("pulsar")
         grid.move_to([0, -0.5, 0])
         generation = Text('Generation :').scale(0.7)
         generation.move_to([-0.25, -3.25, 0])

@@ -1,0 +1,7 @@
+{
+    "author": "Korie Drake Chaney",
+    "scripts": {
+        "manimK" : "manim -pqk Video.py --disable_caching ", 
+        "manimL" : "manim -pql Video.py --disable_caching "
+    }
+}
