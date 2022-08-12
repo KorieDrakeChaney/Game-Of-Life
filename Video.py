@@ -364,6 +364,7 @@ class RuleExplanation(Scene):
         for i, c in enumerate(neighbors_one, 1):
             d = DecimalNumber(i, num_decimal_places=0, include_sign=False, unit=None)
             d.next_to(grid.cells[c], ORIGIN)
+            d.set_fill(BLACK, opacity=1)
             number_group_one.add(d)
         self.play(Create(number_group_one))
         print('a')
@@ -392,6 +393,7 @@ class RuleExplanation(Scene):
         for i, c in enumerate(neighbors_three, 1):
             d = DecimalNumber(i, num_decimal_places=0, include_sign=False, unit=None)
             d.next_to(grid.cells[c], ORIGIN)
+            d.set_fill(BLACK, opacity=1)
             number_group_three.add(d)
         self.play(Create(number_group_three))
         self.play(Circumscribe(grid.cells[12], run_time=2, fade_out=True, buff=0))

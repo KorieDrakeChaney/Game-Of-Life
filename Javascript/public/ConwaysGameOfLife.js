@@ -55,7 +55,6 @@ const requestAnimationFrameHandler = (callback) => {
 }
 
 class Cell {
-    static _id = 0;
     constructor(position){
         this.deadColor = new Color(Rand(255 * 0.1, 255 * 0.5), Rand(255 * 0.1, 255 * 0.5), Rand(255 * 0.1, 255 * 0.5))
         this.staticColor =  new Color(Rand(0, 255), Rand(0, 255), Rand(0, 255))
@@ -64,7 +63,7 @@ class Cell {
         this.prevState = 0;
         this.pos = position;
         this.neighbors = [];
-        this.id = Cell._id++;
+        this.id = cells.length;
         this.body =  document.createElement('div');
         this.body.style.left = `${(position[0] * CELLSIZE)}px`;
         this.body.style.top = `${(position[1] * CELLSIZE)}px`;
@@ -116,37 +115,37 @@ const neighborCheck = () => {
     for(let i = 0; i < cells.length; i++){
         let cell = cells[i];
         if((i + 1) % HEIGHT != 0){
-            cell.neighbors.push(cells[i + 1])
+            cell.neighbors.push(cells[i + 1].id)
         }
         else { 
-            cell.neighbors.push(cells[i - HEIGHT + 1])
+            cell.neighbors.push(cells[i - HEIGHT + 1].id)
         }
 
         if(i % HEIGHT != 0){
-            cell.neighbors.push(cells[i - 1])
+            cell.neighbors.push(cells[i - 1].id)
         }
         else { 
-            cell.neighbors.push(cells[i + HEIGHT - 1])
+            cell.neighbors.push(cells[i + HEIGHT - 1].id)
         }
  
         if(i < cells.length - HEIGHT ){
-            cell.neighbors.push(cells[i + HEIGHT])
+            cell.neighbors.push(cells[i + HEIGHT].id)
         }
         if(i > HEIGHT){
-            cell.neighbors.push(cells[i - HEIGHT])
+            cell.neighbors.push(cells[i - HEIGHT].id)
         }
    
         if(i % HEIGHT != 0 && i < cells.length - HEIGHT){
-            cell.neighbors.push(cells[i - 1 + HEIGHT])
+            cell.neighbors.push(cells[i - 1 + HEIGHT].id)
         }
         if((i + 1) % HEIGHT != 0 && i < cells.length - HEIGHT){
-            cell.neighbors.push(cells[i + 1 + HEIGHT])
+            cell.neighbors.push(cells[i + 1 + HEIGHT].id)
         }
         if(i % HEIGHT != 0 && i > HEIGHT){
-            cell.neighbors.push(cells[i - 1 - HEIGHT])
+            cell.neighbors.push(cells[i - 1 - HEIGHT].id)
         }
         if((i + 1) % HEIGHT != 0 && i > HEIGHT){
-            cell.neighbors.push(cells[i + 1 - HEIGHT])
+            cell.neighbors.push(cells[i + 1 - HEIGHT].id)
         }
 
 
@@ -166,8 +165,8 @@ const MainLoop = () => {
     else if(generation % 200 == 0) random()
     for(const cell of cells){
         let count = 0;
-        for(const neighbor of cell.neighbors){
-            count += neighbor.state;
+        for(const id of cell.neighbors){
+            count += cells[id].state;
         }
         cell.aliveNeighbors = count;
         cell.prevState = cell.state;
