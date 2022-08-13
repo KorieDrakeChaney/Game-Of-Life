@@ -62,7 +62,6 @@ class Cell {
         this.state = 0;
         this.prevState = 0;
         this.pos = position;
-        this.neighbors = [];
         this.id = cells.length;
         this.body =  document.createElement('div');
         this.body.style.left = `${(position[0] * CELLSIZE)}px`;
@@ -110,68 +109,14 @@ const createGrid = (width, height) => {
     }
 }
 
-const neighborCheck = () => { 
-
-    for(let i = 0; i < cells.length; i++){
-        let cell = cells[i];
-        if((i + 1) % HEIGHT != 0){
-            cell.neighbors.push(cells[i + 1].id)
-        }
-        else { 
-            cell.neighbors.push(cells[i - HEIGHT + 1].id)
-        }
-
-        if(i % HEIGHT != 0){
-            cell.neighbors.push(cells[i - 1].id)
-        }
-        else { 
-            cell.neighbors.push(cells[i + HEIGHT - 1].id)
-        }
- 
-        if(i < cells.length - HEIGHT ){
-            cell.neighbors.push(cells[i + HEIGHT].id)
-        }
-        if(i > HEIGHT){
-            cell.neighbors.push(cells[i - HEIGHT].id)
-        }
-   
-        if(i % HEIGHT != 0 && i < cells.length - HEIGHT){
-            cell.neighbors.push(cells[i - 1 + HEIGHT].id)
-        }
-        if((i + 1) % HEIGHT != 0 && i < cells.length - HEIGHT){
-            cell.neighbors.push(cells[i + 1 + HEIGHT].id)
-        }
-        if(i % HEIGHT != 0 && i > HEIGHT){
-            cell.neighbors.push(cells[i - 1 - HEIGHT].id)
-        }
-        if((i + 1) % HEIGHT != 0 && i > HEIGHT){
-            cell.neighbors.push(cells[i + 1 - HEIGHT].id)
-        }
-
-
-
-    }
-
-}
 createGrid(Math.floor(window.innerWidth / (CELLSIZE) ), Math.floor(window.innerHeight / CELLSIZE));
-
-
-
-neighborCheck();
-
 
 const MainLoop = () => { 
     if(generation % 30 == 0) count++;
     else if(generation % 200 == 0) random()
-    for(const cell of cells){
-        let count = 0;
-        for(const id of cell.neighbors){
-            count += cells[id].state;
-        }
-        cell.aliveNeighbors = count;
-        cell.prevState = cell.state;
-    }
     
+    checkNeighbor()
+
     for(const cell of cells){
         if(!pause){
             if(cell.aliveNeighbors == 2){
@@ -244,6 +189,47 @@ let random = () => {
 
 let clear = () => { 
     for(const cell of cells) cell.state = 0;
+}
+
+const checkNeighbor = () => { 
+    const RIGHT = HEIGHT;
+    const LEFT = -HEIGHT;
+    const TOP = -1;
+    const BOTTOM = 1;
+    for(const cell of cells){
+        cell.aliveNeighbors = 0;
+        cell.prevState = cell.state;
+        const hasLeft = cell.id > (HEIGHT - 1);
+        const hasRight = cell.id < (cells.length - HEIGHT);
+        const hasTop = cell.id % HEIGHT != 0;
+        const hasBottom = (cell.id + 1) % HEIGHT != 0;
+
+        if(hasLeft){
+            cell.aliveNeighbors += cells[cell.id + LEFT].state;
+        }
+        if(hasRight){
+            cell.aliveNeighbors += cells[cell.id + RIGHT].state;
+        }
+        if(hasTop){
+            cell.aliveNeighbors += cells[cell.id + TOP].state;
+        }
+        if(hasBottom){
+            cell.aliveNeighbors += cells[cell.id + BOTTOM].state;
+        }
+
+        if(hasTop && hasLeft){
+            cell.aliveNeighbors += cells[cell.id + TOP + LEFT].state;
+        }
+        if(hasTop && hasRight){
+            cell.aliveNeighbors += cells[cell.id + TOP + RIGHT].state;
+        }
+        if(hasBottom && hasLeft){
+            cell.aliveNeighbors += cells[cell.id + BOTTOM + LEFT].state;
+        }
+        if(hasBottom && hasRight){
+            cell.aliveNeighbors += cells[cell.id + BOTTOM + RIGHT].state;
+        }
+    }
 }
 
 
